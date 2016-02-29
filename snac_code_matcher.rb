@@ -1,10 +1,12 @@
 require 'spreadsheet'
 require 'byebug'
 require 'json'
+require 'csv'
 
 class SnacCodeMatcher
   AUTHORITIES_FILE= "authorities.json"
-  FILENAME = "test.xls"
+  PLACES_FILE = "register_offices.csv"
+  FILENAME = "test_2.xls"
 
   def initialize
   end
@@ -30,12 +32,29 @@ class SnacCodeMatcher
   end
 
   def match_snac_code(name)
-    return "NOT FOUND" if authorities[trimmed_name(name)].nil?
+    return "NOT FOUND: #{name}" if authority_match(name).nil?
     authorities[trimmed_name(name)]["ons"]
   end
 
+  def authority_match(name)
+    authorities[trimmed_name(name)]
+  end
+
   def trimmed_name(name)
-    name.gsub(' Borough', '').gsub(' City', '').gsub(' County', '').downcase.gsub(' ', '-')
+    name
+    .gsub('London Borough of ','')
+    .gsub(' - Register Office', '')
+    .gsub(' - Regiser Office', '')
+    .gsub(' Register Office', '')
+    .gsub(' - Registration Office', '')
+    .gsub(' Registration Office', '')
+    .gsub(' Council', '')
+    .gsub(' Borough', '')
+    .gsub(' Metropolitan', '')
+    .gsub(' District', '')
+    .gsub(' City', '')
+    .gsub(' County', '')
+    .downcase.gsub(' ', '-')
   end
 
   def authorities
@@ -43,164 +62,15 @@ class SnacCodeMatcher
   end
 
   def authorities_file
-    @_file ||= File.read(AUTHORITIES_FILE)
+    @_authorities_file ||= File.read(AUTHORITIES_FILE)
+  end
+
+  def places_file
+    @_places_file ||= File.read(PLACES_FILE)
   end
 
   def names
-    [
-      "Barking and Dagenham",
-      "Barnet",
-      "Barnsley",
-      "Bath and North East Somerset",
-      "Central Bedfordshire",
-      "Bedford Borough",
-      "Bexley",
-      "Birmingham",
-      "Blackburn with Darwen",
-      "Blackpool",
-      "Bolton",
-      "Bournemouth",
-      "Bracknell Forest",
-      "Bradford Metropolitan District",
-      "Brent",
-      "Brighton and Hove",
-      "Bristol City",
-      "Bromley",
-      "Buckinghamshire County",
-      "Bury",
-      "Calderdale",
-      "Cambridgeshire",
-      "Camden",
-      "Cheshire East",
-      "Cheshire West and Chester",
-      "City of London",
-      "Cornwall and Isles of Scilly",
-      "Coventry",
-      "Croydon",
-      "Cumbria",
-      "Darlington",
-      "Derby City",
-      "Derbyshire",
-      "Devon",
-      "Doncaster",
-      "Dorset",
-      "Dudley",
-      "Durham",
-      "Ealing",
-      "East Riding of Yorkshire",
-      "East Sussex",
-      "Enfield",
-      "Essex",
-      "Gateshead",
-      "Gloucestershire",
-      "Greenwich",
-      "Hackney and City",
-      "Halton",
-      "Hammersmith and Fulham",
-      "Hampshire",
-      "Haringey",
-      "Harrow",
-      "Hartlepool",
-      "Havering",
-      "Herefordshire",
-      "Hertfordshire",
-      "Hillingdon",
-      "Hounslow",
-      "Isle Of Wight",
-      "Isles of Scilly - see Cornwall & Isles of Scilly",
-      "Islington",
-      "Kensington and Chelsea",
-      "Kent",
-      "Kingston Upon Hull",
-      "Kingston Upon Thames",
-      "Kirklees",
-      "Knowsley",
-      "Lambeth",
-      "Lancashire",
-      "Leeds City",
-      "Leicester City",
-      "Leicestershire and Rutland",
-      "Lewisham",
-      "Lincolnshire",
-      "Liverpool",
-      "Luton",
-      "Manchester",
-      "Medway Towns",
-      "Merton",
-      "Middlesbrough",
-      "Milton Keynes",
-      "Newcastle",
-      "Newham",
-      "Norfolk",
-      "North East Lincolnshire",
-      "North Lincolnshire",
-      "North Somerset",
-      "North Tyneside",
-      "North Yorkshire",
-      "Northamptonshire",
-      "Northumberland",
-      "Nottingham City",
-      "Nottinghamshire",
-      "Oldham",
-      "Oxfordshire",
-      "Peterborough",
-      "Plymouth",
-      "Poole",
-      "Portsmouth",
-      "Reading",
-      "Redbridge",
-      "Redcar and Cleveland",
-      "Richmond Upon Thames",
-      "Rochdale",
-      "Rotherham",
-      "Rutland",
-      "Salford",
-      "Sandwell",
-      "Sefton",
-      "Sheffield",
-      "Shropshire",
-      "Slough",
-      "Solihull",
-      "Somerset",
-      "South Gloucestershire",
-      "South Tyneside",
-      "Southampton",
-      "Southend  ",
-      "Southwark",
-      "St Helens",
-      "Staffordshire",
-      "Stockport",
-      "Stockton on Tees",
-      "Stoke On Trent",
-      "Suffolk",
-      "Sunderland",
-      "Surrey",
-      "Sutton",
-      "Swindon",
-      "Tameside",
-      "Telford and Wrekin",
-      "Thurrock",
-      "Torbay",
-      "Tower Hamlets",
-      "Trafford",
-      "Wakefield",
-      "Walsall",
-      "Waltham Forest",
-      "Wandsworth",
-      "Warrington",
-      "Warwickshire",
-      "West Berkshire",
-      "West Sussex",
-      "Westminster",
-      "Wigan",
-      "Wiltshire",
-      "Windsor and Maidenhead",
-      "Wirral",
-      "Wokingham",
-      "Wolverhampton",
-      "Worcestershire",
-      "York City",
-    ]
+    @_names ||= CSV.new(places_file).to_a.map { |e| e[0] }
   end
 end
 
